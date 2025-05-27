@@ -1,3 +1,5 @@
+__version__ = '1.0.1'
+
 import math
 import os
 import argparse
@@ -29,20 +31,20 @@ class chunker:
            for i in range(self.chunk_cnt):
                yield f.read(self.chunk_sz)
 
-    def split(self, output_dir, encryptor = None):
+    def split(self, output_dir, op = None):
         fname = os.path.basename(self.path)
         for i, chunk in enumerate(self.chunks):
             n = '{}{}{:0{}}'.format(fname, self._delim, i, self.chunk_digits)
             ofname = os.path.join(output_dir, n)
             with open(ofname, mode = 'wb') as f:
-                if callable(encryptor):
-                    f.write(encryptor(chunk))
+                if callable(op):
+                    f.write(op(chunk))
                 else:
                     f.write(chunk)
             #print(i + 1, '/', self.chunk_cnt, ofname)
 
     @staticmethod
-    def merge(input_dir, output_path, decryptor = None, delim = _delim):
+    def merge(input_dir, output_path, op = None, delim = _delim):
         parts = []
         part_nb = []
         for fn in os.listdir(input_dir):
@@ -59,10 +61,16 @@ class chunker:
                 #print(i + 1, '/', N, path)
                 with open(path, 'rb') as f:
                     chunk = f.read()
-                if callable(decryptor):
-                    of.write(decryptor(chunk))
+                if callable(op):
+                    of.write(op(chunk))
                 else:
                     of.write(chunk)
+
+    def do(self, op, output_path):
+        # split, do, merge (in memory)
+        with open(output_path, 'wb') as f:
+            for i, chunk in enumerate(self.chunks):
+                f.write(op(chunk))
 
 def chunk_encrypt(data, password, tag = b''):
     # convergence encryption
@@ -102,28 +110,15 @@ def chunk_decrypt(enc_data, password, tag = b''):
 
 ##
 
-def prep_folder(path):
-    # create temp folder
-    if not os.path.exists(path):
-        os.mkdir(path)
-    # clear stuff there
-    for f in os.listdir(path):
-        fp = os.path.join(path, f)
-        os.remove(fp)
-
 def encrypt(path, password, chunk_sz):
-    prep_folder('temp')
-    c = chunker(path, chunk_sz)
+    io = chunker(path, chunk_sz)
     encryptor = lambda data: chunk_encrypt(data, password)
-    c.split('temp', encryptor)
-    chunker.merge('temp', path + '.enc')
+    io.do(encryptor, path + '.enc')
 
 def decrypt(path, password, chunk_sz):
-    prep_folder('temp')
-    c = chunker(path, chunk_sz + 64)
-    c.split('temp')
+    io = chunker(path, chunk_sz + 64)
     decryptor = lambda data: chunk_decrypt(data, password)
-    chunker.merge('temp', path + '.dec', decryptor)
+    io.do(decryptor, path + '.dec')
 
 if __name__ == '__main__':
 
@@ -144,7 +139,5 @@ if __name__ == '__main__':
     pw = getpass.getpass('password:')
     if args.encrypt:
         encrypt(args.path, pw, args.chunksize)
-        prep_folder('temp')
     if args.decrypt:
         decrypt(args.path, pw, args.chunksize)
-        prep_folder('temp')
