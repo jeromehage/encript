@@ -89,7 +89,7 @@ if __name__ == '__main__':
     group = parser.add_mutually_exclusive_group(required = True)
     group.add_argument('-e', '--encrypt', action = 'store_true')
     group.add_argument('-d', '--decrypt', action = 'store_true')
-    parser.add_argument('-c', '--chunksize', default = _128_MB)
+    parser.add_argument('-c', '--chunksize', type = int, default = _128_MB)
     args = parser.parse_args()
 
     pw = getpass('password:')
