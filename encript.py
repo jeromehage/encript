@@ -1,4 +1,4 @@
-__version__ = '1.1.0'
+__version__ = '1.2.0'
 
 import os, argparse
 from math import ceil
@@ -66,15 +66,19 @@ def chunk_decrypt(enc_data, password, tag = b''):
     data = chacha.decrypt(nonce, enc_data[:-48], tag)
     return data
 
-def encrypt(path, password, chunk_sz):
+def encrypt(path, password, chunk_sz, output_path):
+    if output_path in [None, '', '.']:
+        output_path = path + '.enc'
     chunk = chunker(path, chunk_sz)
     encryptor = lambda data: chunk_encrypt(data, password)
-    chunk.do(encryptor, path + '.enc')
+    chunk.do(encryptor, output_path)
 
-def decrypt(path, password, chunk_sz):
+def decrypt(path, password, chunk_sz, output_path):
+    if output_path in [None, '', '.']:
+        output_path = path + '.dec'
     chunk = chunker(path, chunk_sz + 64)
     decryptor = lambda data: chunk_decrypt(data, password)
-    chunk.do(decryptor, path + '.dec')
+    chunk.do(decryptor, output_path)
 
 if __name__ == '__main__':
 
@@ -85,15 +89,16 @@ if __name__ == '__main__':
         prog = 'encript',
         description = 'allows secure deduplication with convergent encryption',
         )
-    parser.add_argument('path')
+    parser.add_argument('path', type = str)
     group = parser.add_mutually_exclusive_group(required = True)
     group.add_argument('-e', '--encrypt', action = 'store_true')
     group.add_argument('-d', '--decrypt', action = 'store_true')
     parser.add_argument('-c', '--chunksize', type = int, default = _128_MB)
+    parser.add_argument('-o', '--outputpath', default = '')
     args = parser.parse_args()
 
     pw = getpass('password:')
     if args.encrypt:
-        encrypt(args.path, pw, args.chunksize)
+        encrypt(args.path, pw, args.chunksize, args.outputpath)
     if args.decrypt:
-        decrypt(args.path, pw, args.chunksize)
+        decrypt(args.path, pw, args.chunksize, args.outputpath)
