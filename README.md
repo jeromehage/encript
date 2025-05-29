@@ -12,12 +12,10 @@ Convergence encryption tool for secure deduplication.
 - Write each chunk + encrypted key back into a big .enc ouput file.
 - Decryption is similar: split, decrypt keys, decrypt chunks, write to .dec file.
 
-Note: needs x2 extra storage space as the file.
-
 ## How to use
 
 ```
-usage: encript [-h] (-e | -d) [-c CHUNKSIZE] path
+usage: encript [-h] (-e | -d) [-c CHUNKSIZE] [-o OUTPUTPATH] path
 
 allows secure deduplication with convergent encryption
 
@@ -29,4 +27,5 @@ optional arguments:
   -e, --encrypt
   -d, --decrypt
   -c CHUNKSIZE, --chunksize CHUNKSIZE
+  -o OUTPUTPATH, --outputpath OUTPUTPATH
 ```
