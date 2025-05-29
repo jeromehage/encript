@@ -18,18 +18,20 @@ if __name__ == '__main__':
     chunk_sz = 32 * pow(2, 20)
     password = 'shawarma_djej'
 
-    encrypt('testfile.db', password, chunk_sz)
-    decrypt('testfile.db.enc', password, chunk_sz)
-    encrypt('testfile2.db', password, chunk_sz)
-    decrypt('testfile2.db.enc', password, chunk_sz)
+    h1_inp_1, h1_enc_1 = encrypt('testfile.db', password, chunk_sz)
+    h1_enc_2, h1_dec_1 = decrypt('testfile.db.enc', password, chunk_sz)
+    h2_inp_1, h2_enc_1 = encrypt('testfile2.db', password, chunk_sz)
+    h2_enc_2, h2_dec_1 = decrypt('testfile2.db.enc', password, chunk_sz)
 
     # compare final hashes
-    h1 = hash_file('testfile.db')
-    h2 = hash_file('testfile.db.enc.dec')
-    h3 = hash_file('testfile2.db')
-    h4 = hash_file('testfile2.db.enc.dec')
-    assert(h1 == h2)
-    assert(h3 == h4)
+    h1_inp_2 = hash_file('testfile.db')
+    h1_dec_2 = hash_file('testfile.db.enc.dec')
+    h2_inp_2 = hash_file('testfile2.db')
+    h2_dec_2 = hash_file('testfile2.db.enc.dec')
+    assert(h1_inp_1 == h1_dec_1 == h1_inp_2 == h1_dec_2)
+    assert(h2_inp_1 == h2_dec_1 == h2_inp_2 == h2_dec_2)
+    assert(h1_enc_1 == h1_enc_2)
+    assert(h2_enc_1 == h2_enc_2)
 
     # compare encrypted chunk hashes
     t1 = chunker('testfile.db.enc', chunk_sz + 64)

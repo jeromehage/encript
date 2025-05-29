@@ -1,5 +1,6 @@
 __pycache__/*
 build/*
+venv/*
 dist/encript/*
 dist/old/*
 test/*
